@@ -1,0 +1,131 @@
+{
+    "reviews": [
+      {
+        "professor": "Dr. Jane Smith",
+        "subject": "Calculus",
+        "stars": 4,
+        "review": "Dr. Smith is very knowledgeable and makes complex topics easier to understand."
+      },
+      {
+        "professor": "Professor John Doe",
+        "subject": "Physics",
+        "stars": 3,
+        "review": "Professor Doe has a deep understanding of the subject but sometimes goes too fast."
+      },
+      {
+        "professor": "Dr. Emily Johnson",
+        "subject": "Biology",
+        "stars": 5,
+        "review": "Dr. Johnson is enthusiastic and makes the classes very engaging and informative."
+      },
+      {
+        "professor": "Dr. Michael Brown",
+        "subject": "Chemistry",
+        "stars": 2,
+        "review": "Dr. Brown's lectures are hard to follow, and the exams are very difficult."
+      },
+      {
+        "professor": "Professor Sarah Lee",
+        "subject": "Computer Science",
+        "stars": 4,
+        "review": "Professor Lee is a great instructor with a lot of real-world experience."
+      },
+      {
+        "professor": "Dr. Robert Wilson",
+        "subject": "History",
+        "stars": 3,
+        "review": "Dr. Wilson's lectures are informative, but the course materials are outdated."
+      },
+      {
+        "professor": "Dr. Karen Taylor",
+        "subject": "Economics",
+        "stars": 5,
+        "review": "Dr. Taylor presents complex theories in a very accessible manner and is very approachable."
+      },
+      {
+        "professor": "Professor David Anderson",
+        "subject": "Art History",
+        "stars": 4,
+        "review": "Professor Anderson is passionate about art and provides great insights into historical contexts."
+      },
+      {
+        "professor": "Dr. Laura Martinez",
+        "subject": "Psychology",
+        "stars": 4,
+        "review": "Dr. Martinez is very knowledgeable and provides helpful feedback on assignments."
+      },
+      {
+        "professor": "Professor James Thomas",
+        "subject": "Statistics",
+        "stars": 3,
+        "review": "Professor Thomas explains the material well but tends to focus too much on theory."
+      },
+      {
+        "professor": "Dr. Michelle Harris",
+        "subject": "Philosophy",
+        "stars": 5,
+        "review": "Dr. Harris encourages critical thinking and creates a stimulating class environment."
+      },
+      {
+        "professor": "Professor Daniel Clark",
+        "subject": "Political Science",
+        "stars": 2,
+        "review": "Professor Clark's classes are often disorganized, and the grading is inconsistent."
+      },
+      {
+        "professor": "Dr. Lisa Lewis",
+        "subject": "Mathematics",
+        "stars": 4,
+        "review": "Dr. Lewis makes math interesting and provides plenty of practice problems."
+      },
+      {
+        "professor": "Professor William Young",
+        "subject": "Literature",
+        "stars": 5,
+        "review": "Professor Young has a great passion for literature and provides excellent reading materials."
+      },
+      {
+        "professor": "Dr. Olivia Scott",
+        "subject": "Engineering",
+        "stars": 4,
+        "review": "Dr. Scott is very thorough in her explanations and provides helpful real-world examples."
+      },
+      {
+        "professor": "Professor Ethan Allen",
+        "subject": "Sociology",
+        "stars": 3,
+        "review": "Professor Allen covers the basics well but the class could benefit from more interactive discussions."
+      },
+      {
+        "professor": "Dr. Sophia King",
+        "subject": "Environmental Science",
+        "stars": 5,
+        "review": "Dr. King is highly engaging and passionate about environmental issues."
+      },
+      {
+        "professor": "Professor Alexander Lee",
+        "subject": "Music",
+        "stars": 4,
+        "review": "Professor Lee is very talented and provides a lot of practical insights into music theory."
+      },
+      {
+        "professor": "Dr. Megan Green",
+        "subject": "Business",
+        "stars": 3,
+        "review": "Dr. Green's course is useful but the lectures could be more dynamic and less repetitive."
+      },
+      {
+        "professor": "Professor Benjamin White",
+        "subject": "Theatre",
+        "stars": 4,
+        "review": "Professor White is very creative and provides great feedback on performances."
+      },
+      {
+        "professor": "Dr. Ava Adams",
+        "subject": "Linguistics",
+        "stars": 5,
+        "review": "Dr. Adams makes linguistics fascinating and is always willing to help students with their research."
+      }
+    ]
+  }
+  
