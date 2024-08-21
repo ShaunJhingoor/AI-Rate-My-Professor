@@ -8,8 +8,8 @@
 // /pages/api/scraping.js
 //https://www.ratemyprofessors.com/professor/475528
 
-import axios from "axios";
-import * as cheerio from "cheerio";
+import axios from 'axios';
+import * as cheerio from 'cheerio';
 import { Pinecone } from "@pinecone-database/pinecone";
 import { OpenAI } from "openai";
 
@@ -30,37 +30,19 @@ async function processProfessorPage(url) {
     const { data } = await axios.get(url);
     const $ = cheerio.load(data);
 
-    const professorName = $("div.NameTitle__Name-dowf0z-0.cfjPUG")
-      .text()
-      .trim();
-    const rating = $("div.RatingValue__Numerator-qw8sqy-2.liyUjw")
-      .text()
-      .trim();
-    const subject = $("div.NameTitle__Title-dowf0z-1.iLYGwn span a")
-      .eq(0)
-      .text()
-      .trim()
-      .replace(/department/gi, "")
-      .trim();
-    const review = $("div.Comments__StyledComments-dzzyvm-0.gRjWel")
-      .map((i, el) => $(el).text().trim())
-      .get()
-      .join(" ");
-    const school = $("div.NameTitle__Title-dowf0z-1.iLYGwn > a").text().trim();
-    const classesSet = new Set(
-      $("div.RatingHeader__StyledClass-sc-1dlkqw1-3.eXfReS")
-        .map((i, el) => $(el).text().trim())
-        .get()
-    );
-    const classes = Array.from(classesSet).join(", ");
-    const stars = parseInt(rating);
+    const professorName = $('div.NameTitle__Name-dowf0z-0.cfjPUG').text().trim();
+    const rating = $('div.RatingValue__Numerator-qw8sqy-2.liyUjw').text().trim();
+    const subject = $('div.NameTitle__Title-dowf0z-1.iLYGwn span a').eq(0).text().trim().replace(/department/gi, '').trim();
+    const review = $('div.Comments__StyledComments-dzzyvm-0.gRjWel').map((i, el) => $(el).text().trim()).get().join(' ');
+    const school = $('div.NameTitle__Title-dowf0z-1.iLYGwn > a').text().trim();
+    const classesSet = new Set($('div.RatingHeader__StyledClass-sc-1dlkqw1-3.eXfReS').map((i, el) => $(el).text().trim()).get());
+    const classes = Array.from(classesSet).join(', ');
+    const stars = parseInt(rating)
     console.log(`Professor Name: ${professorName}`);
     console.log(`Rating: ${rating}`);
     console.log(`Subject: ${subject}`);
     console.log(`Review: ${review}`);
     console.log(`School: ${school}`);
-    console.log(`Class: ${classes}`);
-
     const embeddingResponse = await openai.embeddings.create({
       model: "text-embedding-3-small",
       input: review,
