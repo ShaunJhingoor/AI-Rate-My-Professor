@@ -328,7 +328,7 @@ export default function Home() {
           >
             <Autocomplete
               sx={{ width: "100%" }}
-              freeSolo
+              freeSolo={true}
               options={subjects}
               value={field}
               onChange={(event, newValue) => {
@@ -341,6 +341,9 @@ export default function Home() {
                   placeholder="Type or select a field"
                   variant="outlined"
                   fullWidth
+                  onChange={(e) => {
+                    setField(e.target.value);
+                  }}
                   sx={{
                     backgroundColor: "#f0f4f8",
                     borderRadius: "20px",
@@ -358,7 +361,6 @@ export default function Home() {
               sx={{
                 backgroundColor: "#f0f4f8",
                 borderRadius: "20px",
-                marginBottom: 1,
                 "& fieldset": { border: "none" },
               }}
             />
@@ -371,7 +373,6 @@ export default function Home() {
               sx={{
                 backgroundColor: "#f0f4f8",
                 borderRadius: "20px",
-                marginBottom: 1,
                 "& fieldset": { border: "none" },
               }}
             />
