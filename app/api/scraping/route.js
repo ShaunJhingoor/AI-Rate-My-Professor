@@ -28,7 +28,7 @@ async function processProfessorPage(url) {
 
     const professorName = $('div.NameTitle__Name-dowf0z-0.cfjPUG').text().trim();
     const rating = $('div.RatingValue__Numerator-qw8sqy-2.liyUjw').text().trim();
-    const subject = $('div.NameTitle__Title-dowf0z-1.iLYGwn').text().trim();
+    const subject = $('div.NameTitle__Title-dowf0z-1.iLYGwn span a').eq(0).text().trim().replace(/department/gi, '').trim();
     const review = $('div.Comments__StyledComments-dzzyvm-0.gRjWel').map((i, el) => $(el).text().trim()).get().join(' ');
     const school = $('div.NameTitle__Title-dowf0z-1.iLYGwn > a').text().trim();
 
