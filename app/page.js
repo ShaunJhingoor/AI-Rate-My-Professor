@@ -1,66 +1,79 @@
 "use client";
 import { useState, useRef } from "react";
-import { Box, TextField, Paper, Typography, IconButton, Button } from '@mui/material';
-import SendIcon from '@mui/icons-material/Send';
+import {
+  Box,
+  TextField,
+  Paper,
+  Typography,
+  IconButton,
+  Button,
+} from "@mui/material";
+import SendIcon from "@mui/icons-material/Send";
 
 export default function Home() {
   const [messages, setMessages] = useState([
     {
       role: "assistant",
-      content: "Hi! I'm the Rate My Professor support assistant. How can I help you today?"
-    }
+      content:
+        "Hi! I'm the Rate My Professor support assistant. How can I help you today?",
+    },
   ]);
-  const [message, setMessage] = useState('');
-  const [url, setUrl] = useState('');
+  const [message, setMessage] = useState("");
+  const [url, setUrl] = useState("");
+  const [field, setField] = useState("");
+  const [school, setSchool] = useState("");
+  const [top, setTop] = useState("");
+
   const messagesEndRef = useRef(null);
 
   const sendMessage = async () => {
     if (message.trim()) {
       setMessages((messages) => [
         ...messages,
-        { role: 'user', content: message },
-        { role: 'assistant', content: '' }
+        { role: "user", content: message },
+        { role: "assistant", content: "" },
       ]);
 
-    setMessage('')
-    const response = fetch('/api/chat', {
-      method: 'POST', 
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify([...messages, {role: 'user', content: message}]),
-    }).then(async(res) =>{
-      const reader = res.body.getReader()
-      const decoder = new TextDecoder()
+      setMessage("");
+      const response = fetch("/api/chat", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify([...messages, { role: "user", content: message }]),
+      }).then(async (res) => {
+        const reader = res.body.getReader();
+        const decoder = new TextDecoder();
 
-      let result = ''
-      return reader.read().then(function processText({done,value}){
-
-        if (done){
-          return result
-        }
-        const text = decoder.decode(value || new Uint8Array(), {stream: true})
-        setMessages((messages) => {
-          let lastMessage = messages[messages.length - 1]
-          let otherMessages = messages.slice(0, messages.length - 1)
-          return [
-            ...otherMessages,
-            {...lastMessage, content: lastMessage.content + text}
-          ]
-        })
-        return reader.read().then(processText)
-      })
-    })
-  }
- }
+        let result = "";
+        return reader.read().then(function processText({ done, value }) {
+          if (done) {
+            return result;
+          }
+          const text = decoder.decode(value || new Uint8Array(), {
+            stream: true,
+          });
+          setMessages((messages) => {
+            let lastMessage = messages[messages.length - 1];
+            let otherMessages = messages.slice(0, messages.length - 1);
+            return [
+              ...otherMessages,
+              { ...lastMessage, content: lastMessage.content + text },
+            ];
+          });
+          return reader.read().then(processText);
+        });
+      });
+    }
+  };
 
   const handleScrape = async () => {
     if (url.trim()) {
       try {
-        const response = await fetch('/api/scraping', {
-          method: 'POST',
+        const response = await fetch("/api/scraping", {
+          method: "POST",
           headers: {
-            'Content-Type': 'application/json',
+            "Content-Type": "application/json",
           },
           body: JSON.stringify({ url }),
         });
@@ -80,69 +93,115 @@ export default function Home() {
   };
 
   const handleKeyDown = (event) => {
-    if (event.key === 'Enter') {
+    if (event.key === "Enter") {
       sendMessage();
     }
   };
 
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
+
+  const handleQuery = async () => {
+    if (field.trim() && school.trim() && top.trim()) {
+
+      setMessages((messages) => [
+        ...messages,
+        { role: "user", content: `Recommend me ${top} professors in ${field} at ${school}...` },
+        { role: "assistant", content: "" },
+      ]);
+      
+      setMessage("");
+      const response = fetch("/api/chat", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify([...messages, { role: "user", content: message, top }]),
+      }).then(async (res) => {
+        const reader = res.body.getReader();
+        const decoder = new TextDecoder();
+
+        let result = "";
+        return reader.read().then(function processText({ done, value }) {
+          if (done) {
+            return result;
+          }
+          const text = decoder.decode(value || new Uint8Array(), {
+            stream: true,
+          });
+          setMessages((messages) => {
+            let lastMessage = messages[messages.length - 1];
+            let otherMessages = messages.slice(0, messages.length - 1);
+            return [
+              ...otherMessages,
+              { ...lastMessage, content: lastMessage.content + text },
+            ];
+          });
+          return reader.read().then(processText);
+        });
+      });
+    } else {
+      alert("Please enter valid values for the query.");
+    }
+  }
 
   return (
     <Box
       sx={{
-        display: 'flex',
-        flexDirection: 'column',
-        justifyContent: 'center',
-        alignItems: 'center',
-        height: '100vh',
-        backgroundColor: '#f0f4f8',
+        display: "flex",
+        flexDirection: "column",
+        justifyContent: "center",
+        alignItems: "center",
+        height: "100vh",
+        backgroundColor: "#f0f4f8",
         padding: 2,
       }}
     >
-      <Typography variant="h4" sx={{ textAlign: 'center', mb: 2 }}>
+      <Typography variant="h4" sx={{ textAlign: "center", mb: 2 }}>
         AI Rate My Professor
       </Typography>
       <Paper
         elevation={3}
         sx={{
-          display: 'flex',
-          flexDirection: 'column',
-          justifyContent: 'space-between',
+          display: "flex",
+          flexDirection: "column",
+          justifyContent: "space-between",
           padding: 2,
-          backgroundColor: '#ffffff',
-          borderRadius: '20px',
-          width: '80%',
-          maxWidth: '600px',
-          height: '80vh',
+          backgroundColor: "#ffffff",
+          borderRadius: "20px",
+          width: "80%",
+          maxWidth: "600px",
+          height: "80vh",
         }}
       >
         <Box
           sx={{
             flex: 1,
-            overflowY: 'auto',
+            overflowY: "auto",
             padding: 2,
-            marginBottom: '8px',
+            marginBottom: "8px",
           }}
         >
           {messages.map((message, index) => (
             <Box
               key={index}
               sx={{
-                display: 'flex',
-                justifyContent: message.role === 'user' ? 'flex-end' : 'flex-start',
+                display: "flex",
+                justifyContent:
+                  message.role === "user" ? "flex-end" : "flex-start",
                 mb: 1,
               }}
             >
               <Paper
                 elevation={1}
                 sx={{
-                  padding: '8px 12px',
-                  borderRadius: '12px',
-                  backgroundColor: message.role === 'user' ? '#007aff' : '#e0e0e0',
-                  color: message.role === 'user' ? '#ffffff' : '#000000',
-                  maxWidth: '60%',
+                  padding: "8px 12px",
+                  borderRadius: "12px",
+                  backgroundColor:
+                    message.role === "user" ? "#007aff" : "#e0e0e0",
+                  color: message.role === "user" ? "#ffffff" : "#000000",
+                  maxWidth: "60%",
                 }}
               >
                 {message.content}
@@ -151,7 +210,16 @@ export default function Home() {
           ))}
           <div ref={messagesEndRef} />
         </Box>
-        <Box sx={{ display: 'flex', alignItems: 'center', backgroundColor: '#f0f4f8', borderRadius: '20px', padding: '8px', marginTop: 'auto' }}>
+        <Box
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            backgroundColor: "#f0f4f8",
+            borderRadius: "20px",
+            padding: "8px",
+            marginTop: "auto",
+          }}
+        >
           <TextField
             fullWidth
             placeholder="Type your message..."
@@ -160,20 +228,78 @@ export default function Home() {
             onChange={(e) => setMessage(e.target.value)}
             onKeyDown={handleKeyDown}
             sx={{
-              backgroundColor: '#f0f4f8',
-              borderRadius: '20px',
+              backgroundColor: "#f0f4f8",
+              borderRadius: "20px",
               marginRight: 1,
-              '& fieldset': { border: 'none' },
+              "& fieldset": { border: "none" },
             }}
           />
           <IconButton
             onClick={sendMessage}
-            sx={{ backgroundColor: '#007bff', color: '#ffffff', borderRadius: '50%', padding: '10px' }}
+            sx={{
+              backgroundColor: "#007bff",
+              color: "#ffffff",
+              borderRadius: "50%",
+              padding: "10px",
+            }}
           >
             <SendIcon />
           </IconButton>
         </Box>
-        <Box sx={{ marginTop: 2 }}>
+        <div className="flex gap-[2vh] py-[2vh]">
+          <TextField
+            fullWidth
+            placeholder="Academic Field"
+            variant="outlined"
+            value={field}
+            onChange={(e) => setField(e.target.value)}
+            sx={{
+              backgroundColor: "#f0f4f8",
+              borderRadius: "20px",
+              marginBottom: 1,
+              "& fieldset": { border: "none" },
+            }}
+          />
+          <TextField
+            fullWidth
+            placeholder="School"
+            variant="outlined"
+            value={school}
+            onChange={(e) => setSchool(e.target.value)}
+            sx={{
+              backgroundColor: "#f0f4f8",
+              borderRadius: "20px",
+              marginBottom: 1,
+              "& fieldset": { border: "none" },
+            }}
+          />
+          <TextField
+            fullWidth
+            placeholder="Top x Professors"
+            variant="outlined"
+            value={top}
+            onChange={(e) => setTop(e.target.value)}
+            sx={{
+              backgroundColor: "#f0f4f8",
+              borderRadius: "20px",
+              marginBottom: 1,
+              "& fieldset": { border: "none" },
+            }}
+          />
+          <Button
+            variant="contained"
+            onClick={handleQuery}
+            sx={{
+              backgroundColor: "#007bff",
+              color: "#ffffff",
+              borderRadius: "20px",
+              padding: "10px",
+            }}
+          >
+            Query
+          </Button>
+        </div>
+        <div className="flex gap-[2vh] py-[2vh]">
           <TextField
             fullWidth
             placeholder="Enter Rate My Professor URL..."
@@ -181,20 +307,25 @@ export default function Home() {
             value={url}
             onChange={(e) => setUrl(e.target.value)}
             sx={{
-              backgroundColor: '#f0f4f8',
-              borderRadius: '20px',
+              backgroundColor: "#f0f4f8",
+              borderRadius: "20px",
               marginBottom: 1,
-              '& fieldset': { border: 'none' },
+              "& fieldset": { border: "none" },
             }}
           />
           <Button
             variant="contained"
             onClick={handleScrape}
-            sx={{ backgroundColor: '#007bff', color: '#ffffff', borderRadius: '20px', padding: '10px' }}
+            sx={{
+              backgroundColor: "#007bff",
+              color: "#ffffff",
+              borderRadius: "20px",
+              padding: "10px",
+            }}
           >
             Scrape and Store
           </Button>
-        </Box>
+        </div>
       </Paper>
     </Box>
   );

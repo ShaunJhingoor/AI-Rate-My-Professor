@@ -45,6 +45,8 @@ Review: "Dr. Johnson has a great teaching style and uses real-world examples to 
 
 export async function POST(req){
     const data = await req.json()
+    const top = parseInt(data[data.length - 1].top);
+    console.log(top)
     const pc = new Pinecone({
         apiKey: process.env.PINECONE_API_KEY
     })
@@ -59,7 +61,7 @@ export async function POST(req){
     })
 
     const results = await index.query({
-        topK:3,
+        topK:top,
         includeMetadata: true,
         vector: embedding.data[0].embedding,
     })
