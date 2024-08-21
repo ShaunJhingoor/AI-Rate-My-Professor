@@ -2,6 +2,7 @@
 // rating: div class = "RatingValue__Numerator-qw8sqy-2 liyUjw"
 // subject: div class = NameTitle__Title-dowf0z-1 iLYGwn
 // reviews: div class = Comments__StyledComments-dzzyvm-0 gRjWel
+// classes: div class =  RatingHeader__StyledClass-sc-1dlkqw1-3 eXfReS
 // /pages/api/scraping.js
 //https://www.ratemyprofessors.com/professor/475528
 import axios from 'axios';
@@ -30,6 +31,7 @@ async function processProfessorPage(url) {
     const rating = $('div.RatingValue__Numerator-qw8sqy-2.liyUjw').text().trim();
     const subject = $('div.NameTitle__Title-dowf0z-1.iLYGwn').text().trim();
     const review = $('div.Comments__StyledComments-dzzyvm-0.gRjWel').map((i, el) => $(el).text().trim()).get().join(' ');
+
     const stars = parseInt(rating)
     console.log(`Professor Name: ${professorName}`);
     console.log(`Rating: ${rating}`);
