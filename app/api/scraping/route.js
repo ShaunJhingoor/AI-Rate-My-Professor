@@ -30,30 +30,31 @@ async function processProfessorPage(url) {
     const rating = $('div.RatingValue__Numerator-qw8sqy-2.liyUjw').text().trim();
     const subject = $('div.NameTitle__Title-dowf0z-1.iLYGwn').text().trim();
     const review = $('div.Comments__StyledComments-dzzyvm-0.gRjWel').map((i, el) => $(el).text().trim()).get().join(' ');
-
+    const stars = parseInt(rating)
     console.log(`Professor Name: ${professorName}`);
     console.log(`Rating: ${rating}`);
     console.log(`Subject: ${subject}`);
     console.log(`Review: ${review}`);
 
-    const embeddingResponse = await openai.createEmbedding({
+    const embeddingResponse = await openai.embeddings.create({
       model: "text-embedding-3-small",
       input: review,
+      encoding_format: "float"
     });
 
     const embedding = embeddingResponse.data[0].embedding;
 
     console.log(`Embedding: ${embedding}`);
 
-    return {
+    return [{
       values: embedding,
       id: professorName,
       metadata: {
-        rating,
+        stars,
         subject,
         review,
       },
-    };
+    }];
   } catch (error) {
     console.error(`Error processing URL: ${url}`, error);
     throw new Error(`Failed to process the URL: ${url}`);
@@ -66,19 +67,26 @@ export async function POST(req, res) {
 
   console.log(`Received POST request with URL: ${url}`);
 
-
+  try {
     const data = await processProfessorPage(url);
-    
+
     console.log(`Data to be upserted into Pinecone:`, data);
 
-    await index.upsert({
-      vectors: [data],
-      namespace: "professors",
-    });
+    if (!Array.isArray(data)) {
+      throw new Error('Data must be an array.');
+    }
+
+    await index.namespace('ns1').upsert(data)
 
     console.log(`Successfully upserted data into Pinecone`);
 
-    return new Response(JSON.stringify({ message: `Scraping successful! Professor: ${data.id}`, success: true }), {
+    return new Response(JSON.stringify({ message: `Scraping successful! Professor: ${data[0].id}`, success: true }), {
       status: 200,
     });
+  } catch (error) {
+    console.error(`Error during POST request processing:`, error);
+    return new Response(JSON.stringify({ message: `Scraping failed!`, success: false }), {
+      status: 500,
+    });
+  }
 }
