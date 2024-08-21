@@ -18,7 +18,7 @@ const openai = new OpenAI({
 const pinecone = new Pinecone({
   apiKey: process.env.PINECONE_API_KEY,
 });
-const index = pinecone.Index('shaun'); 
+const index = pinecone.Index('shark2'); 
 
 async function processProfessorPage(url) {
   try {
@@ -30,11 +30,14 @@ async function processProfessorPage(url) {
     const rating = $('div.RatingValue__Numerator-qw8sqy-2.liyUjw').text().trim();
     const subject = $('div.NameTitle__Title-dowf0z-1.iLYGwn').text().trim();
     const review = $('div.Comments__StyledComments-dzzyvm-0.gRjWel').map((i, el) => $(el).text().trim()).get().join(' ');
-    const stars = parseInt(rating)
+    const school = $('div.NameTitle__Title-dowf0z-1.iLYGwn > a').text().trim();
+
+      const stars = parseInt(rating)
     console.log(`Professor Name: ${professorName}`);
     console.log(`Rating: ${rating}`);
     console.log(`Subject: ${subject}`);
     console.log(`Review: ${review}`);
+    console.log(`School: ${school}`);
 
     const embeddingResponse = await openai.embeddings.create({
       model: "text-embedding-3-small",
@@ -53,6 +56,7 @@ async function processProfessorPage(url) {
         stars,
         subject,
         review,
+        school
       },
     }];
   } catch (error) {
