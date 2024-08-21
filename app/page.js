@@ -7,9 +7,10 @@ import {
   Typography,
   IconButton,
   Button,
+  Autocomplete,
 } from "@mui/material";
 import SendIcon from "@mui/icons-material/Send";
-import SearchOutlinedIcon from '@mui/icons-material/SearchOutlined';
+import SearchOutlinedIcon from "@mui/icons-material/SearchOutlined";
 
 export default function Home() {
   const [messages, setMessages] = useState([
@@ -28,6 +29,57 @@ export default function Home() {
 
   const messagesEndRef = useRef(null);
 
+  const subjects = [
+    "Accounting",
+    "Aerospace Engineering",
+    "Anthropology",
+    "Art History",
+    "Biochemistry",
+    "Biomedical Engineering",
+    "Business Administration",
+    "Chemical Engineering",
+    "Chemistry",
+    "Civil Engineering",
+    "Classics",
+    "Computer Science",
+    "Criminology",
+    "Economics",
+    "Education",
+    "Electrical Engineering",
+    "English Literature",
+    "Environmental Science",
+    "Finance",
+    "Genetics",
+    "Geography",
+    "Geology",
+    "History",
+    "Human Resources",
+    "Information Technology",
+    "International Relations",
+    "Law",
+    "Linguistics",
+    "Marketing",
+    "Mathematics",
+    "Mechanical Engineering",
+    "Medicine",
+    "Microbiology",
+    "Music",
+    "Neuroscience",
+    "Nursing",
+    "Nutrition",
+    "Philosophy",
+    "Physics",
+    "Political Science",
+    "Psychology",
+    "Public Health",
+    "Religious Studies",
+    "Sociology",
+    "Software Engineering",
+    "Statistics",
+    "Theatre",
+    "Veterinary Science",
+    "Zoology",
+  ];
   const sendMessage = async () => {
     if (message.trim()) {
       setMessages((messages) => [
@@ -106,20 +158,25 @@ export default function Home() {
 
   const handleQuery = async () => {
     if (field.trim() && school.trim() && top.trim()) {
-
       setMessages((messages) => [
         ...messages,
-        { role: "user", content: `Recommend me ${top} professors in ${field} at ${school}...` },
+        {
+          role: "user",
+          content: `Recommend me ${top} professors in ${field} at ${school}...`,
+        },
         { role: "assistant", content: "" },
       ]);
-      
+
       setMessage("");
       const response = fetch("/api/chat", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify([...messages, { role: "user", content: message, top }]),
+        body: JSON.stringify([
+          ...messages,
+          { role: "user", content: message, top },
+        ]),
       }).then(async (res) => {
         const reader = res.body.getReader();
         const decoder = new TextDecoder();
@@ -146,11 +203,11 @@ export default function Home() {
     } else {
       alert("Please enter valid values for the query.");
     }
-  }
+  };
 
   const handleToggleQuery = async () => {
     setToggleQuery(!toggleQuery);
-  }
+  };
 
   return (
     <Box
@@ -240,7 +297,7 @@ export default function Home() {
               "& fieldset": { border: "none" },
             }}
           />
-           <IconButton
+          <IconButton
             onClick={handleToggleQuery}
             sx={{
               backgroundColor: "#007bff",
@@ -263,19 +320,33 @@ export default function Home() {
             <SendIcon />
           </IconButton>
         </Box>
-        <div className={`${toggleQuery ? 'block' : 'hidden'} flex gap-[2vh] py-[1vh]`}>
-          <TextField
-            fullWidth
-            placeholder="Academic Field"
-            variant="outlined"
+        <div
+          className={`${
+            toggleQuery ? "block" : "hidden"
+          } flex gap-[2vh] py-[1vh]`}
+        >
+          <Autocomplete
+            sx={{ width: "100%" }}
+            freeSolo
+            options={subjects}
             value={field}
-            onChange={(e) => setField(e.target.value)}
-            sx={{
-              backgroundColor: "#f0f4f8",
-              borderRadius: "20px",
-              marginBottom: 1,
-              "& fieldset": { border: "none" },
+            onChange={(event, newValue) => {
+              setField(newValue);
             }}
+            renderInput={(params) => (
+              <TextField
+                {...params}
+                label="Academic Field"
+                placeholder="Type or select a field"
+                variant="outlined"
+                fullWidth
+                sx={{
+                  backgroundColor: "#f0f4f8",
+                  borderRadius: "20px",
+                  "& fieldset": { border: "none" },
+                }}
+              />
+            )}
           />
           <TextField
             fullWidth
