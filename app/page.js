@@ -9,6 +9,7 @@ import {
   Button,
 } from "@mui/material";
 import SendIcon from "@mui/icons-material/Send";
+import SearchOutlinedIcon from '@mui/icons-material/SearchOutlined';
 
 export default function Home() {
   const [messages, setMessages] = useState([
@@ -23,6 +24,7 @@ export default function Home() {
   const [field, setField] = useState("");
   const [school, setSchool] = useState("");
   const [top, setTop] = useState("");
+  const [toggleQuery, setToggleQuery] = useState(false);
 
   const messagesEndRef = useRef(null);
 
@@ -146,6 +148,10 @@ export default function Home() {
     }
   }
 
+  const handleToggleQuery = async () => {
+    setToggleQuery(!toggleQuery);
+  }
+
   return (
     <Box
       sx={{
@@ -234,6 +240,17 @@ export default function Home() {
               "& fieldset": { border: "none" },
             }}
           />
+           <IconButton
+            onClick={handleToggleQuery}
+            sx={{
+              backgroundColor: "#007bff",
+              color: "#ffffff",
+              borderRadius: "50%",
+              padding: "10px",
+            }}
+          >
+            <SearchOutlinedIcon />
+          </IconButton>
           <IconButton
             onClick={sendMessage}
             sx={{
@@ -246,7 +263,7 @@ export default function Home() {
             <SendIcon />
           </IconButton>
         </Box>
-        <div className="flex gap-[2vh] py-[2vh]">
+        <div className={`${toggleQuery ? 'block' : 'hidden'} flex gap-[2vh] py-[1vh]`}>
           <TextField
             fullWidth
             placeholder="Academic Field"
@@ -299,7 +316,7 @@ export default function Home() {
             Query
           </Button>
         </div>
-        <div className="flex gap-[2vh] py-[2vh]">
+        <div className="flex gap-[1vh] py-[1vh]">
           <TextField
             fullWidth
             placeholder="Enter Rate My Professor URL..."
