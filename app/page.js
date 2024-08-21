@@ -21,6 +21,7 @@ export default function Home() {
     },
   ]);
   const [message, setMessage] = useState("");
+  const [filteredMessage, setFilteredMessage] = useState("");
   const [url, setUrl] = useState("");
   const [field, setField] = useState("");
   const [school, setSchool] = useState("");
@@ -88,16 +89,16 @@ export default function Home() {
         { role: "assistant", content: "" },
       ]);
 
-      setMessage("");
-      const response = fetch("/api/chat", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify([...messages, { role: "user", content: message }]),
-      }).then(async (res) => {
-        const reader = res.body.getReader();
-        const decoder = new TextDecoder();
+      setMessage('')
+    const response = fetch('/api/chat', {
+      method: 'POST', 
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify([...messages, {role: 'user', content: message}]),
+    }).then(async(res) =>{
+      const reader = res.body.getReader()
+      const decoder = new TextDecoder()
 
         let result = "";
         return reader.read().then(function processText({ done, value }) {
@@ -167,7 +168,7 @@ export default function Home() {
         { role: "assistant", content: "" },
       ]);
 
-      setMessage("");
+      setFilteredMessage("");
       const response = fetch("/api/chat", {
         method: "POST",
         headers: {
@@ -175,8 +176,9 @@ export default function Home() {
         },
         body: JSON.stringify([
           ...messages,
-          { role: "user", content: message, top },
-        ]),
+          { role: "user", content: message, top, field, school},
+        ]
+      ),
       }).then(async (res) => {
         const reader = res.body.getReader();
         const decoder = new TextDecoder();
