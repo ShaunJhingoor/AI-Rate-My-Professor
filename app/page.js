@@ -24,9 +24,10 @@ export default function Home() {
   const [url, setUrl] = useState("");
   const [field, setField] = useState("");
   const [school, setSchool] = useState("");
-  const [top, setTop] = useState(3);
+  const [top, setTop] = useState("");
   const [toggleQuery, setToggleQuery] = useState(false);
   const [inputValue, setInputValue] = useState('');
+  const [courseNumber, setCourseNumber] = useState('')
 
   const messagesEndRef = useRef(null);
 
@@ -237,10 +238,30 @@ export default function Home() {
   }, [messages]);
 
   const handleQuery = async () => {
-    console.log(field)
-    if (field.trim() && school.trim()) {
-      // Construct the query message properly
-      const queryMessage = `Recommend me the top ${top} professors in ${field} at ${school}`;
+    let queryMessage = "";
+
+    if (top == ""){
+      setTop(1)
+    }
+
+    if (field.trim() && school.trim() && courseNumber.trim()) {
+      queryMessage = `Recommend me the top ${top} professors in ${field} at ${school} that teach ${courseNumber}`;
+    } else if (field.trim() && school.trim()) {
+      queryMessage = `Recommend me the top ${top} professors in ${field} at ${school}`;
+    } else if (field.trim() && courseNumber.trim()) {
+      queryMessage = `Recommend me the top ${top} professors in ${field} that teach ${courseNumber}`;
+    } else if (school.trim() && courseNumber.trim()) {
+      queryMessage = `Recommend me the top ${top} professors at ${school} that teach ${courseNumber}`;
+    } else if (field.trim()) {
+      queryMessage = `Recommend me the top ${top} professors in ${field}`;
+    } else if (school.trim()) {
+      queryMessage = `Recommend me the top ${top} professors at ${school}`;
+    } else if (courseNumber.trim()) {
+      queryMessage = `Recommend me the top ${top} professors that teach ${courseNumber}`;
+    } else {
+      alert("Please fill out at least one field.");
+      return;
+    }
   
       setMessages((messages) => [
         ...messages,
@@ -290,9 +311,6 @@ export default function Home() {
       } catch (error) {
         console.error("Error during query:", error);
       }
-    } else {
-      alert("Please enter valid values for the query.");
-    }
   };
   
 
@@ -418,35 +436,35 @@ export default function Home() {
             } flex gap-[2vh] py-[1vh]`}
           >
             <Autocomplete
-      sx={{ width: '100%' }}
-      freeSolo
-      options={subjects}
-      value={field}
-      onChange={(event, newValue) => {
-        // Handles selection from the dropdown
-        setField(newValue || '');
-      }}
-      inputValue={inputValue}
-      onInputChange={(event, newInputValue) => {
-        // Handles typing in the input field
-        setInputValue(newInputValue);
-        setField(newInputValue);
-      }}
-      renderInput={(params) => (
-        <TextField
-          {...params}
-          label="Academic Field"
-          placeholder="Type or select a field"
-          variant="outlined"
-          fullWidth
-          sx={{
-            backgroundColor: '#f0f4f8',
-            borderRadius: '20px',
-            '& fieldset': { border: 'none' },
-          }}
-        />
-      )}
-    />
+            sx={{ width: '120%' }}
+            freeSolo
+            options={subjects}
+            value={field}
+            onChange={(event, newValue) => {
+              // Handles selection from the dropdown
+              setField(newValue || '');
+            }}
+            inputValue={inputValue}
+            onInputChange={(event, newInputValue) => {
+              // Handles typing in the input field
+              setInputValue(newInputValue);
+              setField(newInputValue);
+            }}
+            renderInput={(params) => (
+              <TextField
+                {...params}
+                label="Academic Field"
+                placeholder="Type or select a field"
+                variant="outlined"
+                fullWidth
+                sx={{
+                  backgroundColor: '#f0f4f8',
+                  borderRadius: '20px',
+                  '& fieldset': { border: 'none' },
+                }}
+              />
+            )}
+          />
 
             <TextField
               fullWidth
@@ -467,6 +485,19 @@ export default function Home() {
               variant="outlined"
               value={top}
               onChange={(e) => setTop(e.target.value)}
+              sx={{
+                backgroundColor: "#f0f4f8",
+                borderRadius: "20px",
+                marginBottom: 1,
+                "& fieldset": { border: "none" },
+              }}
+            />
+            <TextField
+              fullWidth
+              placeholder="Course #"
+              variant="outlined"
+              value={courseNumber}
+              onChange={(e) => setCourseNumber(e.target.value)}
               sx={{
                 backgroundColor: "#f0f4f8",
                 borderRadius: "20px",
