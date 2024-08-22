@@ -186,14 +186,14 @@ export default function Home() {
   const extractSubject = (message) => {
     // Convert message to lowercase for case-insensitive matching
     const lowerMessage = message.toLowerCase();
-    console.log("Lowercased message:", lowerMessage);
+
     
     // Find any subject keyword in the message
     const foundSubject = subjects.find(subject =>
       lowerMessage.includes(subject.toLowerCase())
     );
 
-    console.log("Found subject:", foundSubject);
+
     
     // Return the found subject or null if none found
     return foundSubject || null;
@@ -202,7 +202,7 @@ export default function Home() {
   const sendMessage = async () => {
     if (message.trim()) {
       const extractedSubject = extractSubject(message)
-      console.log(extractSubject)
+
       setMessages((messages) => [
         ...messages,
         { role: "user", content: message, subject: extractedSubject },

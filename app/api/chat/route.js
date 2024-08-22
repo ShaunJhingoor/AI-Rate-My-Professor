@@ -2,25 +2,29 @@ import { NextResponse } from "next/server";
 import { Pinecone } from "@pinecone-database/pinecone";
 import OpenAI from "openai";
 
-const systemPrompt = `You are a RateMyProfessor assistant, here to help students find the best professors based on their needs. When responding, please ensure:
+const systemPrompt =  `You are a RateMyProfessor assistant, here to help students find the right professors based on their needs. When a student asks for recommendations, respond in a friendly, conversational way, as if you're a knowledgeable advisor guiding them.
 
-1. **Focus on the Subject**: Only include professors who teach the subject specified in the query.
-2. **Include Relevant Information**: Provide details such as:
-   - **Professor Name**
-   - **Subject Expertise**
-   - **Teaching Style**
-   - **Ratings and Reviews**
-   - **Relevant Courses Taught**
-3. **Generate Accurate Recommendations**: Based on the retrieved data, recommend professors who have high ratings and positive reviews specifically for the subject requested.
-4. **Maintain a Friendly and Informative Tone**: Provide clear, concise, and helpful information to guide students in selecting the best professor.`;
+How to Respond:
+Understand the Query:
+Listen carefully to what the student is looking for—whether it's a specific subject, teaching style, or any other preference they might have.
 
+Retrieve Relevant Data:
+Use the RAG model to explore the professor database and gather relevant information. Pay attention to details like professor names, subjects they teach, ratings, and reviews.
+
+Generate Recommendations:
+Based on what you find, suggest the top professors who match the student's needs. Present your suggestions naturally, like you're having a chat. For example, you might say:
+
+"You might really like Dr. Jane Smith for Calculus. She has a fantastic way of making complex topics easy to understand, and students really appreciate the extra help she offers."
+"Another great option is Professor Michael Brown. He's known for breaking down difficult concepts into manageable parts, and his classes are very well-structured."
+"If you prefer a professor who relates calculus to real-world examples, Dr. Emily Johnson would be a great fit. Her teaching style is very engaging and relatable."
+Be Natural and Friendly:
+Keep the tone relaxed and approachable. Think of yourself as a helpful advisor who’s here to make the student’s decision easier.
+`
 export async function POST(req) {
     const data = await req.json();
     const top = parseInt(data[data.length - 1].top) || 5;
-    const filterSubject = data[data.length - 1].subject || "";
-    console.log("top", top);
-    console.log("Request data:", data[data.length - 1]);
-    console.log("Extracted filterSubject:", filterSubject);
+    const filterSubject = data[data.length - 1].subject || null;
+
 
     const pc = new Pinecone({
         apiKey: process.env.PINECONE_API_KEY
@@ -34,22 +38,24 @@ export async function POST(req) {
         input: text,
         encoding_format: 'float',
     });
-
-    const query = {
+    let query
+    if(filterSubject){
+     query = {
         topK: top,
         includeMetadata: true,
         vector: embedding.data[0].embedding,
+        filter: filterSubject ? { "subject": { "$eq": filterSubject } } : undefined
     };
+    }else{
+        query = {
+            topK: top,
+            includeMetadata: true,
+            vector: embedding.data[0].embedding,
+        };
+    }
 
-    // if (filterSubject) {
-    //     query.filter = {
-    //         "metadata.subject": {
-    //             "$eq": filterSubject
-    //         }
-    //     };
-    // }
 
-    console.log("Pinecone query:", query);
+
 
     const results = await index.query(query);
     let resultString = "\n\nReturned results from vector db (done automatically):";
@@ -64,7 +70,6 @@ export async function POST(req) {
         \n\n
         `;
     });
-    console.log("Pinecone results:", results);
 
     const lastMessage = data[data.length - 1];
     const lastMessageContent = lastMessage.content + resultString;
