@@ -24,9 +24,10 @@ export default function Home() {
   const [url, setUrl] = useState("");
   const [field, setField] = useState("");
   const [school, setSchool] = useState("");
-  const [top, setTop] = useState(3);
+  const [top, setTop] = useState("");
   const [toggleQuery, setToggleQuery] = useState(false);
   const [inputValue, setInputValue] = useState('');
+  const [courseNumber, setCourseNumber] = useState('')
 
   const messagesEndRef = useRef(null);
 
@@ -237,10 +238,30 @@ export default function Home() {
   }, [messages]);
 
   const handleQuery = async () => {
-    console.log(field)
-    if (field.trim() && school.trim()) {
-      // Construct the query message properly
-      const queryMessage = `Recommend me the top ${top} professors in ${field} at ${school}`;
+    let queryMessage = "";
+
+    if (top == ""){
+      setTop(1)
+    }
+
+    if (field.trim() && school.trim() && courseNumber.trim()) {
+      queryMessage = `Recommend me the top ${top} professors in ${field} at ${school} that teach ${courseNumber}`;
+    } else if (field.trim() && school.trim()) {
+      queryMessage = `Recommend me the top ${top} professors in ${field} at ${school}`;
+    } else if (field.trim() && courseNumber.trim()) {
+      queryMessage = `Recommend me the top ${top} professors in ${field} that teach ${courseNumber}`;
+    } else if (school.trim() && courseNumber.trim()) {
+      queryMessage = `Recommend me the top ${top} professors at ${school} that teach ${courseNumber}`;
+    } else if (field.trim()) {
+      queryMessage = `Recommend me the top ${top} professors in ${field}`;
+    } else if (school.trim()) {
+      queryMessage = `Recommend me the top ${top} professors at ${school}`;
+    } else if (courseNumber.trim()) {
+      queryMessage = `Recommend me the top ${top} professors that teach ${courseNumber}`;
+    } else {
+      alert("Please fill out at least one field.");
+      return;
+    }
   
       setMessages((messages) => [
         ...messages,
@@ -290,9 +311,11 @@ export default function Home() {
       } catch (error) {
         console.error("Error during query:", error);
       }
-    } else {
-      alert("Please enter valid values for the query.");
-    }
+      setCourseNumber("")
+      setField("")
+      setInputValue("")
+      setSchool("")
+      setTop("")
   };
   
 
@@ -301,219 +324,236 @@ export default function Home() {
   };
 
   return (
-    <div className="w-[80%] m-auto">
+    <Box
+    sx={{
+      display: "flex",
+      flexDirection: "column",
+      justifyContent: "center",
+      alignItems: "center",
+      minHeight: "100vh",
+      backgroundColor: "#f0f4f8",
+      padding: 3,
+    }}
+  >
+    <Typography variant="h3" sx={{ textAlign: "center", mb: 3, fontWeight: 'bold', color: '#007bff' }}>
+      AI Rate My Professor
+    </Typography>
+    <Paper
+      elevation={4}
+      sx={{
+        display: "flex",
+        flexDirection: "column",
+        justifyContent: "space-between",
+        padding: 3,
+        backgroundColor: "#ffffff",
+        borderRadius: "20px",
+        width: "80%",
+        maxWidth: "600px",
+        height: "75vh",
+      }}
+    >
+      <Box
+        sx={{
+          flex: 1,
+          overflowY: "auto",
+          padding: 2,
+          mb: 2,
+          "&::-webkit-scrollbar": {
+            width: "6px",
+          },
+          "&::-webkit-scrollbar-thumb": {
+            backgroundColor: "#007bff",
+            borderRadius: "10px",
+          },
+        }}
+      >
+        {messages.map((message, index) => (
+          <Box
+            key={index}
+            sx={{
+              display: "flex",
+              justifyContent: message.role === "user" ? "flex-end" : "flex-start",
+              mb: 1,
+            }}
+          >
+            <Paper
+              elevation={2}
+              sx={{
+                padding: "10px 15px",
+                borderRadius: "15px",
+                backgroundColor: message.role === "user" ? "#007aff" : "#e0e0e0",
+                color: message.role === "user" ? "#ffffff" : "#000000",
+                maxWidth: "70%",
+                wordWrap: "break-word",
+              }}
+            >
+              {message.content}
+            </Paper>
+          </Box>
+        ))}
+        <div ref={messagesEndRef} />
+      </Box>
       <Box
         sx={{
           display: "flex",
-          flexDirection: "column",
-          justifyContent: "center",
           alignItems: "center",
-          height: "100vh",
-          backgroundColor: "#f0f4f8",
-          padding: 2,
+          borderRadius: "20px",
+          padding: "10px",
+          mt: "auto",
+          border: "1px solid black"
         }}
       >
-        <Typography variant="h4" sx={{ textAlign: "center", mb: 2 }}>
-          AI Rate My Professor
-        </Typography>
-        <Paper
-          elevation={3}
+        <TextField
+          fullWidth
+          placeholder="Type your message..."
+          variant="outlined"
+          value={message}
+          onChange={(e) => setMessage(e.target.value)}
+          onKeyDown={handleKeyDown}
           sx={{
-            display: "flex",
-            flexDirection: "column",
-            justifyContent: "space-between",
-            padding: 2,
             backgroundColor: "#ffffff",
             borderRadius: "20px",
-            width: "80%",
-            maxWidth: "600px",
-            height: "80vh",
-          }}
-        >
-          <Box
-            sx={{
-              flex: 1,
-              overflowY: "auto",
-              padding: 2,
-              marginBottom: "8px",
-            }}
-          >
-            {messages.map((message, index) => (
-              <Box
-                key={index}
-                sx={{
-                  display: "flex",
-                  justifyContent:
-                    message.role === "user" ? "flex-end" : "flex-start",
-                  mb: 1,
-                }}
-              >
-                <Paper
-                  elevation={1}
-                  sx={{
-                    padding: "8px 12px",
-                    borderRadius: "12px",
-                    backgroundColor:
-                      message.role === "user" ? "#007aff" : "#e0e0e0",
-                    color: message.role === "user" ? "#ffffff" : "#000000",
-                    maxWidth: "60%",
-                  }}
-                >
-                  {message.content}
-                </Paper>
-              </Box>
-            ))}
-            <div ref={messagesEndRef} />
-          </Box>
-          <Box
-            sx={{
-              display: "flex",
-              alignItems: "center",
-              backgroundColor: "#f0f4f8",
-              borderRadius: "20px",
-              padding: "8px",
-              marginTop: "auto",
-            }}
-          >
-            <TextField
-              fullWidth
-              placeholder="Type your message..."
-              variant="outlined"
-              value={message}
-              onChange={(e) => setMessage(e.target.value)}
-              onKeyDown={handleKeyDown}
-              sx={{
-                backgroundColor: "#f0f4f8",
-                borderRadius: "20px",
-                marginRight: 1,
-                "& fieldset": { border: "none" },
-              }}
-            />
-            <IconButton
-              onClick={handleToggleQuery}
-              sx={{
-                backgroundColor: "#007bff",
-                color: "#ffffff",
-                borderRadius: "50%",
-                padding: "10px",
-              }}
-            >
-              <SearchOutlinedIcon />
-            </IconButton>
-            <IconButton
-              onClick={sendMessage}
-              sx={{
-                backgroundColor: "#007bff",
-                color: "#ffffff",
-                borderRadius: "50%",
-                padding: "10px",
-              }}
-            >
-              <SendIcon />
-            </IconButton>
-          </Box>
-          <div
-            className={`${
-              toggleQuery ? "block" : "hidden"
-            } flex gap-[2vh] py-[1vh]`}
-          >
-            <Autocomplete
-      sx={{ width: '100%' }}
-      freeSolo
-      options={subjects}
-      value={field}
-      onChange={(event, newValue) => {
-        // Handles selection from the dropdown
-        setField(newValue || '');
-      }}
-      inputValue={inputValue}
-      onInputChange={(event, newInputValue) => {
-        // Handles typing in the input field
-        setInputValue(newInputValue);
-        setField(newInputValue);
-      }}
-      renderInput={(params) => (
-        <TextField
-          {...params}
-          label="Academic Field"
-          placeholder="Type or select a field"
-          variant="outlined"
-          fullWidth
-          sx={{
-            backgroundColor: '#f0f4f8',
-            borderRadius: '20px',
-            '& fieldset': { border: 'none' },
+            mr: 1,
+            "& fieldset": { border: "none" },
           }}
         />
-      )}
-    />
-
-            <TextField
-              fullWidth
-              placeholder="School"
-              variant="outlined"
-              value={school}
-              onChange={(e) => setSchool(e.target.value)}
-              sx={{
-                backgroundColor: "#f0f4f8",
-                borderRadius: "20px",
-                marginBottom: 1,
-                "& fieldset": { border: "none" },
-              }}
-            />
-            <TextField
-              fullWidth
-              placeholder="Top x Professors"
-              variant="outlined"
-              value={top}
-              onChange={(e) => setTop(e.target.value)}
-              sx={{
-                backgroundColor: "#f0f4f8",
-                borderRadius: "20px",
-                marginBottom: 1,
-                "& fieldset": { border: "none" },
-              }}
-            />
-            <Button
-              variant="contained"
-              onClick={handleQuery}
-              sx={{
-                backgroundColor: "#007bff",
-                color: "#ffffff",
-                borderRadius: "20px",
-                padding: "10px",
-              }}
-            >
-              Query
-            </Button>
-          </div>
-        </Paper>
-        <div className="flex py-[1vh] w-[40%] gap-[2vh]">
-          <TextField
-            fullWidth
-            placeholder="Enter Rate My Professor URL..."
-            variant="outlined"
-            value={url}
-            onChange={(e) => setUrl(e.target.value)}
-            sx={{
-              backgroundColor: "#ffffff",
-              borderRadius: "20px",
-              "& fieldset": { border: "none" },
-            }}
-          />
-          <Button
-            variant="contained"
-            onClick={handleScrape}
-            sx={{
-              backgroundColor: "#007bff",
-              color: "#ffffff",
-              borderRadius: "20px",
-            }}
-          >
-            Scrape
-          </Button>
-        </div>
+        <IconButton
+          onClick={handleToggleQuery}
+          sx={{
+            backgroundColor: "#007bff",
+            color: "#ffffff",
+            borderRadius: "50%",
+            padding: "10px",
+            ml: 1,
+          }}
+        >
+          <SearchOutlinedIcon />
+        </IconButton>
+        <IconButton
+          onClick={sendMessage}
+          sx={{
+            backgroundColor: "#007bff",
+            color: "#ffffff",
+            borderRadius: "50%",
+            padding: "10px",
+            ml: 1,
+          }}
+        >
+          <SendIcon />
+        </IconButton>
       </Box>
-    </div>
+      <Box
+        className={`${toggleQuery ? "block" : "hidden"} flex flex-col gap-3 py-2`}
+        sx={{ mt: 2 }}
+      >
+        <Autocomplete
+          sx={{ width: '100%' }}
+          freeSolo
+          options={subjects}
+          value={field}
+          onChange={(event, newValue) => {
+            setField(newValue || '');
+          }}
+          inputValue={inputValue}
+          onInputChange={(event, newInputValue) => {
+            setInputValue(newInputValue);
+            setField(newInputValue);
+          }}
+          renderInput={(params) => (
+            <TextField
+              {...params}
+              label="Academic Field"
+              placeholder="Type or select a field"
+              variant="outlined"
+              fullWidth
+              sx={{
+                backgroundColor: '#ffffff',
+                borderRadius: '20px',
+                '& fieldset': { border: 'none' },
+              }}
+            />
+          )}
+        />
+  
+        <TextField
+          fullWidth
+          placeholder="School"
+          variant="outlined"
+          value={school}
+          onChange={(e) => setSchool(e.target.value)}
+          sx={{
+            backgroundColor: "#ffffff",
+            borderRadius: "20px",
+            "& fieldset": { border: "none" },
+          }}
+        />
+        <TextField
+          fullWidth
+          placeholder="Top x Professors"
+          variant="outlined"
+          value={top}
+          onChange={(e) => setTop(e.target.value)}
+          sx={{
+            backgroundColor: "#ffffff",
+            borderRadius: "20px",
+            "& fieldset": { border: "none" },
+          }}
+        />
+        <TextField
+          fullWidth
+          placeholder="Course #"
+          variant="outlined"
+          value={courseNumber}
+          onChange={(e) => setCourseNumber(e.target.value)}
+          sx={{
+            backgroundColor: "#ffffff",
+            borderRadius: "20px",
+            "& fieldset": { border: "none" },
+          }}
+        />
+        <Button
+          variant="contained"
+          onClick={handleQuery}
+          sx={{
+            backgroundColor: "#007bff",
+            color: "#ffffff",
+            borderRadius: "20px",
+            padding: "10px",
+          }}
+        >
+          Query
+        </Button>
+      </Box>
+    </Paper>
+    <Box sx={{ display: "flex", py: 2, width: "35%", gap: 2,}}>
+      <TextField
+        fullWidth
+        placeholder="Enter Rate My Professor URL..."
+        variant="outlined"
+        value={url}
+        onChange={(e) => setUrl(e.target.value)}
+        sx={{
+          backgroundColor: "#ffffff",
+          borderRadius: "20px",
+          width: "80%",
+          maxWidth: "600px",
+          "& fieldset": { border: "none" },
+        }}
+      />
+      <Button
+        variant="contained"
+        onClick={handleScrape}
+        sx={{
+          backgroundColor: "#007bff",
+          color: "#ffffff",
+          borderRadius: "20px",
+          padding: "10px",
+        }}
+      >
+        Scrape
+      </Button>
+    </Box>
+  </Box>
+  
   );
 }
