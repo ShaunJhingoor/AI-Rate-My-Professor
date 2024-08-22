@@ -183,11 +183,29 @@ export default function Home() {
     }
   }, []);
 
+  const extractSubject = (message) => {
+    // Convert message to lowercase for case-insensitive matching
+    const lowerMessage = message.toLowerCase();
+    console.log("Lowercased message:", lowerMessage);
+    
+    // Find any subject keyword in the message
+    const foundSubject = subjects.find(subject =>
+      lowerMessage.includes(subject.toLowerCase())
+    );
+
+    console.log("Found subject:", foundSubject);
+    
+    // Return the found subject or null if none found
+    return foundSubject || null;
+};
+
   const sendMessage = async () => {
     if (message.trim()) {
+      const extractedSubject = extractSubject(message)
+      console.log(extractSubject)
       setMessages((messages) => [
         ...messages,
-        { role: "user", content: message },
+        { role: "user", content: message, subject: extractedSubject },
         { role: "assistant", content: "" },
       ]);
 
@@ -197,7 +215,7 @@ export default function Home() {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify([...messages, { role: "user", content: message }]),
+        body: JSON.stringify([...messages, { role: "user", content: message,  subject: extractedSubject}]),
       }).then(async (res) => {
         const reader = res.body.getReader();
         const decoder = new TextDecoder();
@@ -269,22 +287,22 @@ export default function Home() {
 
   const handleQuery = async () => {
     let queryMessage = "";
-    let topValue = top || 1; // Default to 1 if top is not provided
+    let topValue = top || 1; 
 
     if (field.trim() && school.trim() && courseNumber.trim()) {
-      queryMessage = `Recommend me the top ${topValue} professors in ${field} at ${school} that teach ${courseNumber}`;
+      queryMessage = `give me the top ${topValue} ${field} teachers at ${school} that teach ${courseNumber}`;
     } else if (field.trim() && school.trim()) {
-      queryMessage = `Recommend me the top ${topValue} professors in ${field} at ${school}`;
+      queryMessage = `give me the top ${topValue} ${field} teachers at ${school}`;
     } else if (field.trim() && courseNumber.trim()) {
-      queryMessage = `Recommend me the top ${topValue} professors in ${field} that teach ${courseNumber}`;
+      queryMessage = `give me the top ${topValue} ${field} teachers that teach ${courseNumber}`;
     } else if (school.trim() && courseNumber.trim()) {
-      queryMessage = `Recommend me the top ${topValue} professors at ${school} that teach ${courseNumber}`;
+      queryMessage = `give me the top ${topValue} teachers at ${school} that teach ${courseNumber}`;
     } else if (field.trim()) {
-      queryMessage = `Recommend me the top ${topValue} professors in ${field}`;
+      queryMessage = `give me the top ${topValue} ${field} `;
     } else if (school.trim()) {
-      queryMessage = `Recommend me the top ${topValue} professors at ${school}`;
+      queryMessage = `give me the top ${topValue} teachers at ${school}`;
     } else if (courseNumber.trim()) {
-      queryMessage = `Recommend me the top ${topValue} professors that teach ${courseNumber}`;
+      queryMessage = `give me the top ${topValue} teachers that teach ${courseNumber}`;
     } else {
       alert("Please fill out at least one field.");
       return;
@@ -295,7 +313,8 @@ export default function Home() {
       {
         role: "user",
         content: queryMessage,
-        top: topValue // Include the top value in the message object
+        top: topValue,
+        subject: field
       },
       { role: "assistant", content: "" },
     ]);
@@ -308,7 +327,7 @@ export default function Home() {
         },
         body: JSON.stringify([
           ...messages,
-          { role: "user", content: queryMessage, top: topValue },
+          { role: "user", content: queryMessage, top: topValue, subject: field },
         ]),
       });
   
@@ -662,9 +681,20 @@ export default function Home() {
             color: "#ffffff",
             borderRadius: "30px",
             padding: "10px",
+            transition: "transform 0.3s ease",
+            '&:hover': {
+              '& .icon': {
+                transform: 'scale(1.1)',
+              },
+            },
           }}
         >
-          <GrainIcon sx={{ fontSize: 40}} />
+          <GrainIcon sx={{ 
+            fontSize: 40, 
+            position: 'relative', 
+            display: 'inline-block' 
+          }} 
+          className="icon" />
         </Button>
       </Box>
     </Box>
