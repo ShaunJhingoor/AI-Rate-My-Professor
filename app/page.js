@@ -184,18 +184,14 @@ export default function Home() {
   }, []);
 
   const extractSubject = (message) => {
-    // Convert message to lowercase for case-insensitive matching
     const lowerMessage = message.toLowerCase();
 
-    
-    // Find any subject keyword in the message
+
     const foundSubject = subjects.find(subject =>
       lowerMessage.includes(subject.toLowerCase())
     );
 
 
-    
-    // Return the found subject or null if none found
     return foundSubject || null;
 };
 
@@ -285,6 +281,10 @@ export default function Home() {
     scrollToBottom();
   }, [messages]);
 
+  const capitalizeWords = (str) => {
+    return str.replace(/\b\w/g, (char) => char.toUpperCase());
+  };
+
   const handleQuery = async () => {
     let queryMessage = "";
     let topValue = top || 1; 
@@ -327,7 +327,7 @@ export default function Home() {
         },
         body: JSON.stringify([
           ...messages,
-          { role: "user", content: queryMessage, top: topValue, subject: field },
+          { role: "user", content: queryMessage, top: topValue, subject: capitalizeWords(field) },
         ]),
       });
   
