@@ -1,5 +1,5 @@
 "use client";
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import {
   Box,
   TextField,
@@ -24,62 +24,137 @@ export default function Home() {
   const [url, setUrl] = useState("");
   const [field, setField] = useState("");
   const [school, setSchool] = useState("");
-  const [top, setTop] = useState("");
+  const [top, setTop] = useState(3);
   const [toggleQuery, setToggleQuery] = useState(false);
+  const [inputValue, setInputValue] = useState('');
 
   const messagesEndRef = useRef(null);
 
   const subjects = [
     "Accounting",
     "Aerospace Engineering",
+    "Agricultural Science",
+    "American Studies",
     "Anthropology",
+    "Applied Mathematics",
+    "Architecture",
     "Art History",
+    "Astronomy",
     "Biochemistry",
+    "Bioinformatics",
+    "Biology",
     "Biomedical Engineering",
+    "Biophysics",
+    "Botany",
     "Business Administration",
     "Chemical Engineering",
     "Chemistry",
+    "Child Development",
     "Civil Engineering",
+    "Classical Studies",
     "Classics",
+    "Cognitive Science",
+    "Communications",
+    "Comparative Literature",
+    "Computer Engineering",
     "Computer Science",
+    "Creative Writing",
     "Criminology",
+    "Cultural Studies",
+    "Data Science",
+    "Dentistry",
+    "Drama",
+    "Ecology",
     "Economics",
     "Education",
     "Electrical Engineering",
+    "Engineering Management",
+    "English Language",
     "English Literature",
+    "Environmental Engineering",
     "Environmental Science",
+    "Epidemiology",
+    "Ethics",
+    "Film Studies",
     "Finance",
+    "Fine Arts",
+    "Food Science",
+    "Forestry",
     "Genetics",
     "Geography",
     "Geology",
+    "Graphic Design",
+    "Health Administration",
     "History",
+    "Hospitality Management",
     "Human Resources",
+    "Humanities",
+    "Industrial Engineering",
+    "Information Systems",
     "Information Technology",
+    "International Business",
     "International Relations",
+    "Journalism",
+    "Kinesiology",
+    "Landscape Architecture",
+    "Languages",
     "Law",
     "Linguistics",
+    "Literature",
+    "Logistics",
+    "Management",
+    "Marine Biology",
     "Marketing",
+    "Materials Science",
     "Mathematics",
     "Mechanical Engineering",
+    "Media Studies",
     "Medicine",
+    "Meteorology",
     "Microbiology",
+    "Military Science",
+    "Molecular Biology",
     "Music",
+    "Nanotechnology",
     "Neuroscience",
     "Nursing",
     "Nutrition",
+    "Occupational Therapy",
+    "Oceanography",
+    "Operations Management",
+    "Optometry",
+    "Paleontology",
+    "Pharmacology",
     "Philosophy",
+    "Physical Education",
     "Physics",
+    "Physiology",
     "Political Science",
+    "Psychiatry",
     "Psychology",
+    "Public Administration",
     "Public Health",
+    "Public Policy",
     "Religious Studies",
+    "Robotics",
+    "Social Work",
     "Sociology",
     "Software Engineering",
+    "Spanish",
+    "Sports Management",
     "Statistics",
+    "Supply Chain Management",
+    "Sustainability Studies",
     "Theatre",
+    "Theology",
+    "Urban Planning",
     "Veterinary Science",
-    "Zoology",
-  ];
+    "Visual Arts",
+    "Wildlife Conservation",
+    "Women's Studies",
+    "Zoology"
+  ]
+  
   const sendMessage = async () => {
     if (message.trim()) {
       setMessages((messages) => [
@@ -118,6 +193,7 @@ export default function Home() {
           return reader.read().then(processText);
         });
       });
+      scrollToBottom();
     }
   };
 
@@ -156,39 +232,50 @@ export default function Home() {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
+
   const handleQuery = async () => {
-    if (field.trim() && school.trim() && top.trim()) {
+    console.log(field)
+    if (field.trim() && school.trim()) {
+      // Construct the query message properly
+      const queryMessage = `Recommend me the top ${top} professors in ${field} at ${school}`;
+  
       setMessages((messages) => [
         ...messages,
         {
           role: "user",
-          content: `Recommend me ${top} professors in ${field} at ${school}...`,
+          content: queryMessage,
         },
         { role: "assistant", content: "" },
       ]);
-
-      setMessage("");
-      const response = fetch("/api/chat", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify([
-          ...messages,
-          { role: "user", content: message, top },
-        ]),
-      }).then(async (res) => {
-        const reader = res.body.getReader();
+  
+      try {
+        const response = await fetch("/api/chat", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify([
+            ...messages,
+            { role: "user", content: queryMessage },
+          ]),
+        });
+  
+        const reader = response.body.getReader();
         const decoder = new TextDecoder();
-
+  
         let result = "";
-        return reader.read().then(function processText({ done, value }) {
+        reader.read().then(function processText({ done, value }) {
           if (done) {
             return result;
           }
+  
           const text = decoder.decode(value || new Uint8Array(), {
             stream: true,
           });
+  
           setMessages((messages) => {
             let lastMessage = messages[messages.length - 1];
             let otherMessages = messages.slice(0, messages.length - 1);
@@ -197,13 +284,17 @@ export default function Home() {
               { ...lastMessage, content: lastMessage.content + text },
             ];
           });
+  
           return reader.read().then(processText);
         });
-      });
+      } catch (error) {
+        console.error("Error during query:", error);
+      }
     } else {
       alert("Please enter valid values for the query.");
     }
   };
+  
 
   const handleToggleQuery = async () => {
     setToggleQuery(!toggleQuery);
@@ -327,28 +418,36 @@ export default function Home() {
             } flex gap-[2vh] py-[1vh]`}
           >
             <Autocomplete
-              sx={{ width: "100%" }}
-              freeSolo
-              options={subjects}
-              value={field}
-              onChange={(event, newValue) => {
-                setField(newValue);
-              }}
-              renderInput={(params) => (
-                <TextField
-                  {...params}
-                  label="Academic Field"
-                  placeholder="Type or select a field"
-                  variant="outlined"
-                  fullWidth
-                  sx={{
-                    backgroundColor: "#f0f4f8",
-                    borderRadius: "20px",
-                    "& fieldset": { border: "none" },
-                  }}
-                />
-              )}
-            />
+      sx={{ width: '100%' }}
+      freeSolo
+      options={subjects}
+      value={field}
+      onChange={(event, newValue) => {
+        // Handles selection from the dropdown
+        setField(newValue || '');
+      }}
+      inputValue={inputValue}
+      onInputChange={(event, newInputValue) => {
+        // Handles typing in the input field
+        setInputValue(newInputValue);
+        setField(newInputValue);
+      }}
+      renderInput={(params) => (
+        <TextField
+          {...params}
+          label="Academic Field"
+          placeholder="Type or select a field"
+          variant="outlined"
+          fullWidth
+          sx={{
+            backgroundColor: '#f0f4f8',
+            borderRadius: '20px',
+            '& fieldset': { border: 'none' },
+          }}
+        />
+      )}
+    />
+
             <TextField
               fullWidth
               placeholder="School"
