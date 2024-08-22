@@ -239,85 +239,84 @@ export default function Home() {
 
   const handleQuery = async () => {
     let queryMessage = "";
-
-    if (top == ""){
-      setTop(1)
-    }
+    let topValue = top || 1; // Default to 1 if top is not provided
 
     if (field.trim() && school.trim() && courseNumber.trim()) {
-      queryMessage = `Recommend me the top ${top} professors in ${field} at ${school} that teach ${courseNumber}`;
+      queryMessage = `Recommend me the top ${topValue} professors in ${field} at ${school} that teach ${courseNumber}`;
     } else if (field.trim() && school.trim()) {
-      queryMessage = `Recommend me the top ${top} professors in ${field} at ${school}`;
+      queryMessage = `Recommend me the top ${topValue} professors in ${field} at ${school}`;
     } else if (field.trim() && courseNumber.trim()) {
-      queryMessage = `Recommend me the top ${top} professors in ${field} that teach ${courseNumber}`;
+      queryMessage = `Recommend me the top ${topValue} professors in ${field} that teach ${courseNumber}`;
     } else if (school.trim() && courseNumber.trim()) {
-      queryMessage = `Recommend me the top ${top} professors at ${school} that teach ${courseNumber}`;
+      queryMessage = `Recommend me the top ${topValue} professors at ${school} that teach ${courseNumber}`;
     } else if (field.trim()) {
-      queryMessage = `Recommend me the top ${top} professors in ${field}`;
+      queryMessage = `Recommend me the top ${topValue} professors in ${field}`;
     } else if (school.trim()) {
-      queryMessage = `Recommend me the top ${top} professors at ${school}`;
+      queryMessage = `Recommend me the top ${topValue} professors at ${school}`;
     } else if (courseNumber.trim()) {
-      queryMessage = `Recommend me the top ${top} professors that teach ${courseNumber}`;
+      queryMessage = `Recommend me the top ${topValue} professors that teach ${courseNumber}`;
     } else {
       alert("Please fill out at least one field.");
       return;
     }
   
-      setMessages((messages) => [
-        ...messages,
-        {
-          role: "user",
-          content: queryMessage,
+    setMessages((messages) => [
+      ...messages,
+      {
+        role: "user",
+        content: queryMessage,
+        top: topValue // Include the top value in the message object
+      },
+      { role: "assistant", content: "" },
+    ]);
+  
+    try {
+      const response = await fetch("/api/chat", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
         },
-        { role: "assistant", content: "" },
-      ]);
+        body: JSON.stringify([
+          ...messages,
+          { role: "user", content: queryMessage, top: topValue },
+        ]),
+      });
   
-      try {
-        const response = await fetch("/api/chat", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify([
-            ...messages,
-            { role: "user", content: queryMessage },
-          ]),
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+  
+      let result = "";
+      reader.read().then(function processText({ done, value }) {
+        if (done) {
+          return result;
+        }
+  
+        const text = decoder.decode(value || new Uint8Array(), {
+          stream: true,
         });
   
-        const reader = response.body.getReader();
-        const decoder = new TextDecoder();
-  
-        let result = "";
-        reader.read().then(function processText({ done, value }) {
-          if (done) {
-            return result;
-          }
-  
-          const text = decoder.decode(value || new Uint8Array(), {
-            stream: true,
-          });
-  
-          setMessages((messages) => {
-            let lastMessage = messages[messages.length - 1];
-            let otherMessages = messages.slice(0, messages.length - 1);
-            return [
-              ...otherMessages,
-              { ...lastMessage, content: lastMessage.content + text },
-            ];
-          });
-  
-          return reader.read().then(processText);
+        setMessages((messages) => {
+          let lastMessage = messages[messages.length - 1];
+          let otherMessages = messages.slice(0, messages.length - 1);
+          return [
+            ...otherMessages,
+            { ...lastMessage, content: lastMessage.content + text },
+          ];
         });
-      } catch (error) {
-        console.error("Error during query:", error);
-      }
-      setCourseNumber("")
-      setField("")
-      setInputValue("")
-      setSchool("")
-      setTop("")
-  };
   
+        return reader.read().then(processText);
+      });
+    } catch (error) {
+      console.error("Error during query:", error);
+    }
+    setCourseNumber("");
+    setField("");
+    setInputValue("");
+    setSchool("");
+    setTop("");
+    setToggleQuery(false)
+ };
+
 
   const handleToggleQuery = async () => {
     setToggleQuery(!toggleQuery);
