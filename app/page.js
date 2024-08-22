@@ -236,6 +236,7 @@ export default function Home() {
   }, [messages]);
 
   const handleQuery = async () => {
+    console.log(field)
     if (field.trim() && school.trim()) {
       // Construct the query message properly
       const queryMessage = `Recommend me the top ${top} professors in ${field} at ${school}`;
