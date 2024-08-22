@@ -24,7 +24,6 @@ Keep the tone relaxed and approachable. Think of yourself as a helpful advisor w
 export async function POST(req){
     const data = await req.json()
     const top = parseInt(data[data.length - 1].top);
-    console.log(top)
     const pc = new Pinecone({
         apiKey: process.env.PINECONE_API_KEY
     })
