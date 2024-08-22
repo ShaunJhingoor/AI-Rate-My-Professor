@@ -26,6 +26,7 @@ export default function Home() {
   const [school, setSchool] = useState("");
   const [top, setTop] = useState(3);
   const [toggleQuery, setToggleQuery] = useState(false);
+  const [inputValue, setInputValue] = useState('');
 
   const messagesEndRef = useRef(null);
 
@@ -152,7 +153,7 @@ export default function Home() {
     "Wildlife Conservation",
     "Women's Studies",
     "Zoology"
-  ];
+  ]
   
   const sendMessage = async () => {
     if (message.trim()) {
@@ -417,28 +418,36 @@ export default function Home() {
             } flex gap-[2vh] py-[1vh]`}
           >
             <Autocomplete
-              sx={{ width: "100%" }}
-              freeSolo
-              options={subjects}
-              value={field}
-              onChange={(event, newValue) => {
-                setField(newValue);
-              }}
-              renderInput={(params) => (
-                <TextField
-                  {...params}
-                  label="Academic Field"
-                  placeholder="Type or select a field"
-                  variant="outlined"
-                  fullWidth
-                  sx={{
-                    backgroundColor: "#f0f4f8",
-                    borderRadius: "20px",
-                    "& fieldset": { border: "none" },
-                  }}
-                />
-              )}
-            />
+      sx={{ width: '100%' }}
+      freeSolo
+      options={subjects}
+      value={field}
+      onChange={(event, newValue) => {
+        // Handles selection from the dropdown
+        setField(newValue || '');
+      }}
+      inputValue={inputValue}
+      onInputChange={(event, newInputValue) => {
+        // Handles typing in the input field
+        setInputValue(newInputValue);
+        setField(newInputValue);
+      }}
+      renderInput={(params) => (
+        <TextField
+          {...params}
+          label="Academic Field"
+          placeholder="Type or select a field"
+          variant="outlined"
+          fullWidth
+          sx={{
+            backgroundColor: '#f0f4f8',
+            borderRadius: '20px',
+            '& fieldset': { border: 'none' },
+          }}
+        />
+      )}
+    />
+
             <TextField
               fullWidth
               placeholder="School"
