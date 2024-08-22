@@ -8,9 +8,14 @@ import {
   IconButton,
   Button,
   Autocomplete,
+  CircularProgress,
 } from "@mui/material";
 import SendIcon from "@mui/icons-material/Send";
 import SearchOutlinedIcon from "@mui/icons-material/SearchOutlined";
+import GrainIcon from '@mui/icons-material/Grain';
+import MicIcon from "@mui/icons-material/Mic";
+import MicOffIcon from "@mui/icons-material/MicOff";
+import ReactMarkdown from "react-markdown"
 
 export default function Home() {
   const [messages, setMessages] = useState([
@@ -28,7 +33,9 @@ export default function Home() {
   const [toggleQuery, setToggleQuery] = useState(false);
   const [inputValue, setInputValue] = useState('');
   const [courseNumber, setCourseNumber] = useState('')
-
+  const [isLoading, setIsLoading] = useState(false);
+  const [isListening, setIsListening] = useState(false);
+  const recognitionRef = useRef(null);
   const messagesEndRef = useRef(null);
 
   const subjects = [
@@ -155,12 +162,50 @@ export default function Home() {
     "Women's Studies",
     "Zoology"
   ]
+
   
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      recognitionRef.current = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+      recognitionRef.current.continuous = false;
+      recognitionRef.current.interimResults = false;
+      recognitionRef.current.lang = "en-US";
+      
+      // Add your event listeners and logic for speech recognition here
+      recognitionRef.current.onresult = (event) => {
+        setMessage(event.results[0][0].transcript);
+        setIsListening(false);
+      };
+
+      recognitionRef.current.onend = () => {
+        setIsListening(false);
+      };
+    }
+  }, []);
+
+  const extractSubject = (message) => {
+    // Convert message to lowercase for case-insensitive matching
+    const lowerMessage = message.toLowerCase();
+
+    
+    // Find any subject keyword in the message
+    const foundSubject = subjects.find(subject =>
+      lowerMessage.includes(subject.toLowerCase())
+    );
+
+
+    
+    // Return the found subject or null if none found
+    return foundSubject || null;
+};
+
   const sendMessage = async () => {
     if (message.trim()) {
+      const extractedSubject = extractSubject(message)
+
       setMessages((messages) => [
         ...messages,
-        { role: "user", content: message },
+        { role: "user", content: message, subject: extractedSubject },
         { role: "assistant", content: "" },
       ]);
 
@@ -170,7 +215,7 @@ export default function Home() {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify([...messages, { role: "user", content: message }]),
+        body: JSON.stringify([...messages, { role: "user", content: message,  subject: extractedSubject}]),
       }).then(async (res) => {
         const reader = res.body.getReader();
         const decoder = new TextDecoder();
@@ -200,6 +245,7 @@ export default function Home() {
 
   const handleScrape = async () => {
     if (url.trim()) {
+      setIsLoading(true);
       try {
         const response = await fetch("/api/scraping", {
           method: "POST",
@@ -221,6 +267,8 @@ export default function Home() {
     } else {
       alert("Please enter a valid URL.");
     }
+    setUrl("")
+    setIsLoading(false)
   };
 
   const handleKeyDown = (event) => {
@@ -239,22 +287,22 @@ export default function Home() {
 
   const handleQuery = async () => {
     let queryMessage = "";
-    let topValue = top || 1; // Default to 1 if top is not provided
+    let topValue = top || 1; 
 
     if (field.trim() && school.trim() && courseNumber.trim()) {
-      queryMessage = `Recommend me the top ${topValue} professors in ${field} at ${school} that teach ${courseNumber}`;
+      queryMessage = `give me the top ${topValue} ${field} teachers at ${school} that teach ${courseNumber}`;
     } else if (field.trim() && school.trim()) {
-      queryMessage = `Recommend me the top ${topValue} professors in ${field} at ${school}`;
+      queryMessage = `give me the top ${topValue} ${field} teachers at ${school}`;
     } else if (field.trim() && courseNumber.trim()) {
-      queryMessage = `Recommend me the top ${topValue} professors in ${field} that teach ${courseNumber}`;
+      queryMessage = `give me the top ${topValue} ${field} teachers that teach ${courseNumber}`;
     } else if (school.trim() && courseNumber.trim()) {
-      queryMessage = `Recommend me the top ${topValue} professors at ${school} that teach ${courseNumber}`;
+      queryMessage = `give me the top ${topValue} teachers at ${school} that teach ${courseNumber}`;
     } else if (field.trim()) {
-      queryMessage = `Recommend me the top ${topValue} professors in ${field}`;
+      queryMessage = `give me the top ${topValue} ${field} `;
     } else if (school.trim()) {
-      queryMessage = `Recommend me the top ${topValue} professors at ${school}`;
+      queryMessage = `give me the top ${topValue} teachers at ${school}`;
     } else if (courseNumber.trim()) {
-      queryMessage = `Recommend me the top ${topValue} professors that teach ${courseNumber}`;
+      queryMessage = `give me the top ${topValue} teachers that teach ${courseNumber}`;
     } else {
       alert("Please fill out at least one field.");
       return;
@@ -265,7 +313,8 @@ export default function Home() {
       {
         role: "user",
         content: queryMessage,
-        top: topValue // Include the top value in the message object
+        top: topValue,
+        subject: field
       },
       { role: "assistant", content: "" },
     ]);
@@ -278,7 +327,7 @@ export default function Home() {
         },
         body: JSON.stringify([
           ...messages,
-          { role: "user", content: queryMessage, top: topValue },
+          { role: "user", content: queryMessage, top: topValue, subject: field },
         ]),
       });
   
@@ -322,237 +371,332 @@ export default function Home() {
     setToggleQuery(!toggleQuery);
   };
 
-  return (
-    <Box
-    sx={{
-      display: "flex",
-      flexDirection: "column",
-      justifyContent: "center",
-      alignItems: "center",
-      minHeight: "100vh",
-      backgroundColor: "#f0f4f8",
-      padding: 3,
-    }}
-  >
-    <Typography variant="h3" sx={{ textAlign: "center", mb: 3, fontWeight: 'bold', color: '#007bff' }}>
-      AI Rate My Professor
-    </Typography>
-    <Paper
-      elevation={4}
+ const handleVoiceInput = () => {
+    const recognition = recognitionRef.current;
+    if (isListening) {
+      recognition.stop();
+      setIsListening(false);
+    } else {
+      setIsListening(true);
+      recognition.start();
+    }
+  };
+  
+  return(
+      <Box
       sx={{
         display: "flex",
         flexDirection: "column",
-        justifyContent: "space-between",
+        justifyContent: "center",
+        alignItems: "center",
+        minHeight: "100vh",
+        background: "linear-gradient(to right, #1e2a38, #2c3e50, #34495e)",
         padding: 3,
-        backgroundColor: "#ffffff",
-        borderRadius: "20px",
-        width: "80%",
-        maxWidth: "600px",
-        height: "75vh",
       }}
     >
-      <Box
-        sx={{
-          flex: 1,
-          overflowY: "auto",
-          padding: 2,
-          mb: 2,
-          "&::-webkit-scrollbar": {
-            width: "6px",
-          },
-          "&::-webkit-scrollbar-thumb": {
-            backgroundColor: "#007bff",
-            borderRadius: "10px",
-          },
-        }}
-      >
-        {messages.map((message, index) => (
-          <Box
-            key={index}
-            sx={{
-              display: "flex",
-              justifyContent: message.role === "user" ? "flex-end" : "flex-start",
-              mb: 1,
-            }}
-          >
-            <Paper
-              elevation={2}
+    {isLoading && (
+            <Box
               sx={{
-                padding: "10px 15px",
-                borderRadius: "15px",
-                backgroundColor: message.role === "user" ? "#007aff" : "#e0e0e0",
-                color: message.role === "user" ? "#ffffff" : "#000000",
-                maxWidth: "70%",
-                wordWrap: "break-word",
+                position: "fixed",
+                top: 0,
+                left: 0,
+                width: "100%",
+                height: "100%",
+                backgroundColor: "rgba(0, 0, 0, 0.6)",
+                display: "flex",
+                justifyContent: "center",
+                alignItems: "center",
+                zIndex: 1300,
               }}
             >
-              {message.content}
-            </Paper>
-          </Box>
-        ))}
-        <div ref={messagesEndRef} />
-      </Box>
-      <Box
+              <CircularProgress sx={{ color: "#ffffff" }} />
+            </Box>
+          )}
+    <Typography
+      variant="h3"
+      sx={{
+        textAlign: "center",
+        mb: 3,
+        fontWeight: "bold",
+        color: "#f5f5f5", 
+        textShadow: "3px 3px 8px rgba(0, 0, 0, 1)", 
+        letterSpacing: "1.5px", 
+        lineHeight: "1.4", 
+        fontFamily: "'Montserrat', sans-serif", 
+        padding: "2px 5px", 
+      }}
+    >
+      AI Rate My Professor
+    </Typography>
+
+
+
+
+      
+      <Paper
+        elevation={2} // Reduced elevation for a softer shadow
         sx={{
           display: "flex",
-          alignItems: "center",
+          flexDirection: "column",
+          justifyContent: "space-between",
+          padding: 3,
+          backgroundColor: "#1f2a38", // Darker background for contrast
           borderRadius: "20px",
-          padding: "10px",
-          mt: "auto",
-          border: "1px solid black"
+          width: "80%",
+          maxWidth: "600px",
+          height: "75dvh",
+          boxShadow: "0px 6px 12px rgba(0, 0, 0, 0.4)", // Softer, more cohesive shadow
         }}
       >
-        <TextField
-          fullWidth
-          placeholder="Type your message..."
-          variant="outlined"
-          value={message}
-          onChange={(e) => setMessage(e.target.value)}
-          onKeyDown={handleKeyDown}
+        <Box
           sx={{
-            backgroundColor: "#ffffff",
-            borderRadius: "20px",
-            mr: 1,
-            "& fieldset": { border: "none" },
-          }}
-        />
-        <IconButton
-          onClick={handleToggleQuery}
-          sx={{
-            backgroundColor: "#007bff",
-            color: "#ffffff",
-            borderRadius: "50%",
-            padding: "10px",
-            ml: 1,
+            flex: 1,
+            overflowY: "auto",
+            padding: 2,
+            mb: 2,
+            "&::-webkit-scrollbar": {
+              width: "2px",
+            },
+            "&::-webkit-scrollbar-thumb": {
+              backgroundColor: "#007bff",
+              borderRadius: "10px",
+            },
           }}
         >
-          <SearchOutlinedIcon />
-        </IconButton>
-        <IconButton
-          onClick={sendMessage}
-          sx={{
-            backgroundColor: "#007bff",
-            color: "#ffffff",
-            borderRadius: "50%",
-            padding: "10px",
-            ml: 1,
-          }}
-        >
-          <SendIcon />
-        </IconButton>
-      </Box>
-      <Box
-        className={`${toggleQuery ? "block" : "hidden"} flex flex-col gap-3 py-2`}
-        sx={{ mt: 2 }}
-      >
-        <Autocomplete
-          sx={{ width: '100%' }}
-          freeSolo
-          options={subjects}
-          value={field}
-          onChange={(event, newValue) => {
-            setField(newValue || '');
-          }}
-          inputValue={inputValue}
-          onInputChange={(event, newInputValue) => {
-            setInputValue(newInputValue);
-            setField(newInputValue);
-          }}
-          renderInput={(params) => (
-            <TextField
-              {...params}
-              label="Academic Field"
-              placeholder="Type or select a field"
-              variant="outlined"
-              fullWidth
+          {messages.map((message, index) => (
+            <Box
+              key={index}
               sx={{
-                backgroundColor: '#ffffff',
-                borderRadius: '20px',
-                '& fieldset': { border: 'none' },
+                display: "flex",
+                justifyContent: message.role === "user" ? "flex-end" : "flex-start",
+                mb: 1,
               }}
-            />
-          )}
-        />
-  
-        <TextField
-          fullWidth
-          placeholder="School"
-          variant="outlined"
-          value={school}
-          onChange={(e) => setSchool(e.target.value)}
+            >
+              <Paper
+                elevation={2}
+                sx={{
+                  padding: "10px 15px",
+                  borderRadius: "15px",
+                  backgroundColor: message.role === "user" ? "#007aff" : "#2c3e50", 
+                  color: message.role === "user" ? "#ffffff" : "#ffffff", 
+                  maxWidth: "70%",
+                  wordWrap: "break-word",
+                }}
+              >
+                <ReactMarkdown>{message.content}</ReactMarkdown>
+              </Paper>
+            </Box>
+          ))}
+          <div ref={messagesEndRef} />
+        </Box>
+        
+        <Box
           sx={{
-            backgroundColor: "#ffffff",
+            display: "flex",
+            alignItems: "center",
             borderRadius: "20px",
-            "& fieldset": { border: "none" },
+            padding: "10px",
+            mt: "auto",
+            border: "1px solid #34495e" 
           }}
-        />
-        <TextField
-          fullWidth
-          placeholder="Top x Professors"
-          variant="outlined"
-          value={top}
-          onChange={(e) => setTop(e.target.value)}
+        >
+          <TextField
+            fullWidth
+            placeholder="Type your message..."
+            variant="outlined"
+            value={message}
+            onChange={(e) => setMessage(e.target.value)}
+            onKeyDown={handleKeyDown}
+            sx={{
+              backgroundColor: "#1e2a38", 
+              borderRadius: "20px",
+              mr: 1,
+              "& fieldset": { border: "none" },
+              color: "#ffffff",
+              "& input": { color: "#ffffff" },
+            }}
+          />
+          <IconButton
+            onClick={handleToggleQuery}
+            sx={{
+              backgroundColor: "#007bff",
+              color: "#ffffff",
+              borderRadius: "50%",
+              padding: "10px",
+              ml: 1,
+            }}
+          >
+            <SearchOutlinedIcon />
+          </IconButton>
+          <IconButton
+          onClick={handleVoiceInput}
           sx={{
-            backgroundColor: "#ffffff",
-            borderRadius: "20px",
-            "& fieldset": { border: "none" },
+            backgroundColor: "#007bff",
+            color: "#ffffff",
+            borderRadius: "50%",
+            padding: "10px",
+            ml: 1,
           }}
-        />
+        >
+          {isListening ? <MicIcon /> : <MicOffIcon />}
+        </IconButton>
+          <IconButton
+            onClick={sendMessage}
+            sx={{
+              backgroundColor: "#007bff",
+              color: "#ffffff",
+              borderRadius: "50%",
+              padding: "10px",
+              ml: 1,
+            }}
+          >
+            <SendIcon />
+          </IconButton>
+        </Box>
+        
+        <Box
+          className={`${toggleQuery ? "block" : "hidden"} flex flex-col gap-3 py-2`}
+          sx={{ mt: 2 }}
+        >
+          <Autocomplete
+            sx={{ width: '100%' }}
+            freeSolo
+            options={subjects}
+            value={field}
+            onChange={(event, newValue) => {
+              setField(newValue || '');
+            }}
+            inputValue={inputValue}
+            onInputChange={(event, newInputValue) => {
+              setInputValue(newInputValue);
+              setField(newInputValue);
+            }}
+            renderInput={(params) => (
+              <TextField
+                {...params}
+                label="Academic Field"
+                placeholder="Type or select a field"
+                variant="outlined"
+                fullWidth
+                sx={{
+                  backgroundColor: '#1e2a38',
+                  borderRadius: '20px',
+                  '& fieldset': { border: 'none' },
+                  color: "#ffffff",
+                  "& input": { color: "#ffffff" },
+                  '& .MuiInputLabel-root': {
+                    color: "#c0c0c0",
+                  },
+                  '& .MuiInputLabel-shrink': {
+                    color: "#c0c0c0",
+                  },
+                  '& .MuiInputBase-input::placeholder': {
+                    color: "#c0c0c0",
+                  },
+                  '& .MuiAutocomplete-clearIndicator': {
+                    color: '#c0c0c0', 
+                  },
+                }}
+              />
+            )}
+          />
+          <TextField
+            fullWidth
+            placeholder="School"
+            variant="outlined"
+            value={school}
+            onChange={(e) => setSchool(e.target.value)}
+            sx={{
+              backgroundColor: "#1e2a38",
+              borderRadius: "20px",
+              "& fieldset": { border: "none" },
+              color: "#ffffff",
+              "& input": { color: "#ffffff" },
+            }}
+          />
+          <TextField
+            fullWidth
+            placeholder="Top x Professors"
+            variant="outlined"
+            value={top}
+            onChange={(e) => setTop(e.target.value)}
+            sx={{
+              backgroundColor: "#1e2a38",
+              borderRadius: "20px",
+              "& fieldset": { border: "none" },
+              color: "#ffffff",
+              "& input": { color: "#ffffff" },
+            }}
+          />
+          <TextField
+            fullWidth
+            placeholder="Course #"
+            variant="outlined"
+            value={courseNumber}
+            onChange={(e) => setCourseNumber(e.target.value)}
+            sx={{
+              backgroundColor: "#1e2a38",
+              borderRadius: "20px",
+              "& fieldset": { border: "none" },
+              color: "#ffffff",
+              "& input": { color: "#ffffff" },
+            }}
+          />
+          <Button
+            variant="contained"
+            onClick={handleQuery}
+            sx={{
+              backgroundColor: "#007bff",
+              color: "#ffffff",
+              borderRadius: "20px",
+              padding: "10px",
+            }}
+          >
+            Query
+          </Button>
+        </Box>
+      </Paper>
+      
+      <Box sx={{ display: "flex", py: 2, gap: 2, justifyContent:"center", width: "80%",
+          maxWidth: "600px", }}>
         <TextField
           fullWidth
-          placeholder="Course #"
+          placeholder="Enter Rate My Professor URL..."
           variant="outlined"
-          value={courseNumber}
-          onChange={(e) => setCourseNumber(e.target.value)}
+          value={url}
+          onChange={(e) => setUrl(e.target.value)}
           sx={{
-            backgroundColor: "#ffffff",
+            backgroundColor: "#1e2a38",
             borderRadius: "20px",
             "& fieldset": { border: "none" },
+            color: "#ffffff",
+            "& input": { color: "#ffffff" },
           }}
         />
         <Button
           variant="contained"
-          onClick={handleQuery}
+          onClick={handleScrape}
           sx={{
             backgroundColor: "#007bff",
             color: "#ffffff",
-            borderRadius: "20px",
+            borderRadius: "30px",
             padding: "10px",
+            transition: "transform 0.3s ease",
+            '&:hover': {
+              '& .icon': {
+                transform: 'scale(1.1)',
+              },
+            },
           }}
         >
-          Query
+          <GrainIcon sx={{ 
+            fontSize: 40, 
+            position: 'relative', 
+            display: 'inline-block' 
+          }} 
+          className="icon" />
         </Button>
       </Box>
-    </Paper>
-    <Box sx={{ display: "flex", py: 2, width: "35%", gap: 2,}}>
-      <TextField
-        fullWidth
-        placeholder="Enter Rate My Professor URL..."
-        variant="outlined"
-        value={url}
-        onChange={(e) => setUrl(e.target.value)}
-        sx={{
-          backgroundColor: "#ffffff",
-          borderRadius: "20px",
-          width: "80%",
-          maxWidth: "600px",
-          "& fieldset": { border: "none" },
-        }}
-      />
-      <Button
-        variant="contained"
-        onClick={handleScrape}
-        sx={{
-          backgroundColor: "#007bff",
-          color: "#ffffff",
-          borderRadius: "20px",
-          padding: "10px",
-        }}
-      >
-        Scrape
-      </Button>
     </Box>
-  </Box>
-  
-  );
+  )
 }
