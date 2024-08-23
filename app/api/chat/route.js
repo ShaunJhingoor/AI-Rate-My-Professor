@@ -46,7 +46,7 @@ export async function POST(req) {
 
     const text = data[data.length - 1].content;
     const embedding = await openai.embeddings.create({
-        model: "text-embedding-3-small",
+        model: "text-embedding-ada-002",
         input: text,
         encoding_format: 'float',
     });
